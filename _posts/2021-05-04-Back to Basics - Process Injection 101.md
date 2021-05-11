@@ -1,5 +1,5 @@
 ---
-title: T1055 - Basics of Process Injection 101
+title: T1055 - Basics of Process Injection - Part 1
 author: Khush V
 date: 2021-04-05 14:10:00 +0000
 categories: [TTPs, T1055 - Process Injection]
@@ -8,18 +8,18 @@ tags: [process injection, T1055]
 
 # Introduction
 
-This guide aims to gently introduce the concepts of process injection, beginning with a naive and simple Proof of Concept code and iterating this with additional functionality such as injecting into different processes, encryption of payloads, obfuscating function calls, using DLLs & EXEs, unhooking and general evasion techniques. In each iteration, the aim is to introduce a new technique that can be applied to the code in order to better it. 
+This guide aims to gently introduce the concepts of process injection, beginning with a naive and simple Proof of Concept code and iterating this with additional functionality such as injecting into different processes, encryption of payloads, obfuscating function calls, using DLLs & EXEs, unhooking and general evasion techniques. In each iteration, the aim is to introduce a new technique that can be applied to the code in order to improve it. 
 
 ## Process injection - Back to Basics
 
-Process injection a technique used in order to execute code, typically in another process. This allows an adversary to be stealthy in their approach and bypass operating system defences. There are three main types of different payloads that can be injected:
+Process injection is a technique used in order to execute code, typically in another process. This allows an adversary to be stealthy in their approach and bypass operating system defences. There are mainly three different types of payloads that can be injected:
 - Shellcode injection
 - DLL injection
 - Exe injection
 
 At its core, a simple process injection technique can be reduced down to the following actions:
 - Pick a target process. For now, we'll inject into our own process. 
-- Before we ca write some code into the process, we need to know where we can write code to. We can request the operating system to allocate some memory for us. 
+- Before we can write some code into the process, we need to know where we can write code to. We can request the operating system to allocate some memory for us. 
 - Write said code.
 - Get the process to execute this code in some manner.
 
@@ -100,17 +100,16 @@ _Sweet sweet calc._
 Before we start tinkering with the code, let's take a closer look at the different API calls made. 
 
 #### VirtualAlloc
-This function requests some memory to be allocated within the process. We request this using the `PAGE_EXECUTE_READWRITE` flag. Shortly, we'll attempt to just read & write and then later change the memory page to execute as a way of evading EDRs. Similarly, we could request just enough memory to fit the payload, but I've used 4K (4096), as an average page size in order to appear like a geuine program.
+This function requests some memory to be allocated within the process. We request this using the `PAGE_EXECUTE_READWRITE` flag. Shortly, we'll attempt to just read & write and then later change the memory page to execute as a way of evading EDRs. Similarly, we could request just enough memory to fit the payload, but I've used 4K (4096), as an average page size in order to appear like a genuine program.
 
 #### RtlMoveMemory
 `RtlMoveMemory` is a relatively simple function that will take the payload and write it to the memory space we have been newly assigned.
 
 #### CreateThread
-`CreateThread` tells the operating system to initialise a new thrad within the given process, and the parameters we pass are thread attributes, default stack size (note this will round up to the nearest page), the start address (should point to newly copied payload address) and other parameters to pass when creating a thread.
+`CreateThread` tells the operating system to initialise a new thread within the given process, and the parameters we pass are thread attributes, default stack size (note this will round up to the nearest page), the start address (should point to newly copied payload address) and other parameters to pass when creating a thread.
 
 #### WaitForSingleObject
-Once a thread has been created, it enters the world in a suspended state. It takes some cycles for it to become active and by then the process could have exitd. This function stops the process from exiting until we hear back from the new thread executes or fails to.
-
+Once a thread has been created, it enters the world in a suspended state. It takes some cycles for it to become active and by then the process could have exited. This function stops the calling process from exiting, until the new thread is in a callable state, i.e. it executes.
 
 
 The code includes liberal use of `GetLastError` in order to faciliate debugging.
@@ -210,7 +209,7 @@ Combining these function calls, allows us to use a resource as the payload carri
 
 ## 4 - Changing memory protection 
 
-Nowadays, any decent EDR solution will look for memory allocated with both WRITE and EXECUTE permissions and flag this as potentially malicious. Let's see what we can do to further obfuscate what we are trying to achieve. Instead of requesting memory that is both executable and writeable, we'll instead request memory that is writable, write to it and then change the memory protection to executable only. Of course, this won't thwart your decent EDR solution, but its good opsec.
+Nowadays, any decent EDR solution will look for memory allocated with both WRITE and EXECUTE permissions and flag this as potentially malicious. Let's see what we can do to further obfuscate our actions. Instead of requesting memory that is both executable and writeable, we'll instead request memory that is writable, write to it and then change the memory protection to executable only. Of course, this won't thwart your decent EDR solution, but its good opsec.
 
 We'll change from this:
 
@@ -323,12 +322,12 @@ int main()
 	if (address == 0) {
 ```
 
-We use the same encryption function in the stub to decrypt the payload, due to the commutative properties of XOR. Again most of this code is taken from the stub. We leave the encrypted character array empty, which we get from the stub output. Let's take this a notch and use a meterpreter payload to mimic a more real life scenario:
+We use the same encryption function in the stub to decrypt the payload, due to the commutative properties of XOR. Again most of this code is taken from the stub. We leave the encrypted character array empty, which we get from the stub output. Let's take this up a notch and use a meterpreter payload to mimic a more real life scenario:
 
 ![Stub encrypting meterpreter payload ](/assets/img/5.png)
 _Stub encrypting meterpreter payload._
 
-We now take this output and paste this into the `encryped` char array variable. We could automate this, but as a proof of concept it works. The result is a very happy shell:
+We now take this output and paste this into the `encrypted` char array variable. We could automate this, but as a proof of concept it works. The result is a very happy shell:
 
 ![Running encrypted process injection ](/assets/img/6.png)
 _Process injection with an encrypted payload._
@@ -336,7 +335,7 @@ _Process injection with an encrypted payload._
 ![Result ](/assets/img/7.png)
 _Nothing more satisfying._
 
-The more astute reader may spot that command prompt doesn't return until meterpreter exits. This can be fixed either by migrating process, or ensuring that meterpreter exits cleanly. Something to be work on in a future iteration.
+The more astute reader may spot that command prompt doesn't return until meterpreter exits. This can be fixed either by migrating process, or ensuring that meterpreter exits cleanly using EXITFUNC. Something to be worked on in a future iteration.
 
 However, the real test is in bypassing at least an AV. Let's take this executable and see if Defender complains:
 

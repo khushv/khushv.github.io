@@ -1,0 +1,63 @@
+
+
+64 bit support
+bruteforce last key with egghunter-esque technique
+syswhispersv2
+
+
+
+https://www.tutorialspoint.com/how-to-include-libraries-in-visual-studio-2012
+
+http://sektor7.net/RTO-MalDev2/RTO-MalDev2.ova
+https://www.optiv.com/insights/source-zero/blog/endpoint-detection-and-response-how-hackers-have-evolved
+
+https://www.youtube.com/watch?v=qzZTXcBu3cE
+https://guidedhacking.com/resources/guided-hacking-dll-injector.4/
+https://docs.microsoft.com/en-us/archive/msdn-magazine/2002/february/inside-windows-win32-portable-executable-file-format-in-detail
+
+
+https://sevrosecurity.com/2020/04/13/process-injection-part-2-queueuserapc/#process_injection_primer
+
+
+
+
+
+
+DLL Injection methods
+
+    LoadLibraryExW
+    LdrLoadDll
+    LdrpLoadDll
+    LdrpLoadDllInternal
+    ManualMapping
+
+Shellcode execution methods
+
+    NtCreateThreadEx
+    Thread hijacking
+    SetWindowsHookEx
+    QueueUserAPC
+
+Manual mapping features:
+
+    Section mapping
+    Base relocation
+    Imports
+    Delayed imports
+    SEH support
+    TLS initialization
+    Security cookie initalization
+
+Additional features:
+
+    Various cloaking options
+        PEB unlinking
+        PE header cloaking
+        Thread cloaking
+    Handle hijacking
+    Hook scanning/restoring
+
+
+	https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/using-ntstatus-values
+
+	https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/596a1078-e883-4972-9bbc-49e60bebca55
